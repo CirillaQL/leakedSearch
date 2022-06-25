@@ -42,15 +42,14 @@ func GetVideosList(keyword string, videos chan model.Video) {
 	// First Page
 	c.OnHTML("div[class='video-list video-rotate video-list-with-ads']", func(e *colly.HTMLElement) {
 		e.ForEach("div[class='video-item ']", func(i int, element *colly.HTMLElement) {
-			url := element.ChildAttr("a[class='thumb ']", "href")
+			videoUrl := element.ChildAttr("a[class='thumb ']", "href")
 			name := element.ChildText("a:nth-child(2)")
 			coverImg := element.ChildAttr("a[class='thumb '] > picture > img", "data-src")
 			video := model.Video{
-				URL:      spankbangBaseUrl + url,
+				URL:      spankbangBaseUrl + videoUrl,
 				CoverImg: coverImg,
 				Name:     name,
 			}
-			fmt.Println(video)
 			videos <- video
 		})
 		page++
