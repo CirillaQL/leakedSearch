@@ -12,6 +12,7 @@ import (
 const spankbangBaseUrl = "https://spankbang.com"
 
 func getPageNumber(keyword string) int {
+	url := fmt.Sprintf("%s/s/%s/", spankbangBaseUrl, keyword)
 	c := colly.NewCollector()
 	var page int
 	c.OnHTML("div[class='pagination']", func(e *colly.HTMLElement) {
@@ -26,7 +27,7 @@ func getPageNumber(keyword string) int {
 			page = result
 		}
 	})
-	err := c.Visit(spankbangBaseUrl + "/s/" + keyword + "/")
+	err := c.Visit(url)
 	if err != nil {
 		log.Fatalf("Can't Connect to SpankBang, Error: %+v", err)
 	}
@@ -34,9 +35,9 @@ func getPageNumber(keyword string) int {
 }
 
 func GetVideosList(keyword string, videos chan model.Video) {
+	url := fmt.Sprintf("%s/s/%s/", spankbangBaseUrl, keyword)
 	c := colly.NewCollector()
 	pageTotal := getPageNumber(keyword)
-	fmt.Println(pageTotal)
 	page := 2
 	// First Page
 	c.OnHTML("div[class='video-list video-rotate video-list-with-ads']", func(e *colly.HTMLElement) {
@@ -45,7 +46,7 @@ func GetVideosList(keyword string, videos chan model.Video) {
 			name := element.ChildText("a:nth-child(2)")
 			coverImg := element.ChildAttr("a[class='thumb '] > picture > img", "data-src")
 			video := model.Video{
-				URL:      "https://spankbang.com" + url,
+				URL:      spankbangBaseUrl + url,
 				CoverImg: coverImg,
 				Name:     name,
 			}
@@ -55,14 +56,15 @@ func GetVideosList(keyword string, videos chan model.Video) {
 		page++
 		if page <= pageTotal {
 			time.Sleep(2 * time.Second)
-			err := c.Visit(spankbangBaseUrl + "/s/" + keyword + "/" + strconv.Itoa(page-1) + "/")
+			nextPageUrl := fmt.Sprintf("%s/s/%s/%s/", spankbangBaseUrl, keyword, strconv.Itoa(page-1))
+			err := c.Visit(nextPageUrl)
 			if err != nil {
 				log.Fatalf("Can't Connect to SpankBang, Error: %+v", err)
 			}
 		}
 	})
 
-	err := c.Visit(spankbangBaseUrl + "/s/" + keyword + "/")
+	err := c.Visit(url)
 	if err != nil {
 		log.Fatalf("Can't Connect to SpankBang, Error: %+v", err)
 	}
