@@ -1,5 +1,5 @@
 <template>
-  <n-config-provider :locale="zhCN" :date-locale="dateZhCN">
+  <n-config-provider>
     <n-space vertical>
       <n-input-group>
         <n-input placeholder="搜索内容" style="width: 50%;">
