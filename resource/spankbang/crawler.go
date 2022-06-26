@@ -2,11 +2,13 @@ package spankbang
 
 import (
 	"fmt"
-	"github.com/CirillaQL/leakedSearch/model"
-	"github.com/gocolly/colly/v2"
 	"log"
 	"strconv"
+	"sync"
 	"time"
+
+	"github.com/CirillaQL/leakedSearch/model"
+	"github.com/gocolly/colly/v2"
 )
 
 const spankbangBaseUrl = "https://spankbang.com"
@@ -34,7 +36,9 @@ func getPageNumber(keyword string) int {
 	return page
 }
 
-func GetVideosList(keyword string, videos chan model.Video) {
+func GetVideosList(keyword string, videos chan model.Video, wg *sync.WaitGroup) {
+	defer wg.Done()
+	defer close(videos)
 	url := fmt.Sprintf("%s/s/%s/", spankbangBaseUrl, keyword)
 	c := colly.NewCollector()
 	pageTotal := getPageNumber(keyword)
@@ -54,7 +58,7 @@ func GetVideosList(keyword string, videos chan model.Video) {
 		})
 		page++
 		if page <= pageTotal {
-			time.Sleep(2 * time.Second)
+			time.Sleep(1 * time.Second)
 			nextPageUrl := fmt.Sprintf("%s/s/%s/%s/", spankbangBaseUrl, keyword, strconv.Itoa(page-1))
 			err := c.Visit(nextPageUrl)
 			if err != nil {

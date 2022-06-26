@@ -2,11 +2,13 @@ package dirtyship
 
 import (
 	"fmt"
-	"github.com/CirillaQL/leakedSearch/model"
-	"github.com/gocolly/colly/v2"
 	"log"
 	"strconv"
+	"sync"
 	"time"
+
+	"github.com/CirillaQL/leakedSearch/model"
+	"github.com/gocolly/colly/v2"
 )
 
 const dirtyshipBaseUrl = "https://dirtyship.com/"
@@ -29,12 +31,14 @@ func getPageNumber(keyword string) int {
 	})
 	err := c.Visit(url)
 	if err != nil {
-		log.Fatalf("Can't Connect to SpankBang, Error: %+v", err)
+		log.Fatalf("Can't Connect to DirtyShip, Error: %+v", err)
 	}
 	return page
 }
 
-func GetVideosList(keyword string, videos chan model.Video) {
+func GetVideosList(keyword string, videos chan model.Video, wg *sync.WaitGroup) {
+	defer wg.Done()
+	defer close(videos)
 	url := fmt.Sprintf("%s?search_param=all&s=%s", dirtyshipBaseUrl, keyword)
 	c := colly.NewCollector()
 	pageTotal := getPageNumber(keyword)
@@ -53,10 +57,9 @@ func GetVideosList(keyword string, videos chan model.Video) {
 		})
 		page++
 		if (page - 1) <= pageTotal {
-			time.Sleep(2 * time.Second)
+			time.Sleep(1 * time.Second)
 			nextPageUrl := fmt.Sprintf("%spage/%s/%s", dirtyshipBaseUrl, strconv.Itoa(page-1),
 				"?search_param=all&s="+keyword)
-			fmt.Println(nextPageUrl)
 			err := c.Visit(nextPageUrl)
 			if err != nil {
 				log.Fatalf("Can't Connect to DirtyShip, Error: %+v", err)
