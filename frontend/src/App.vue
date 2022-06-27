@@ -1,16 +1,20 @@
 <template>
   <img alt="logo"  src="./assets/leakedSearchLogo.png">
   <div class="blank"/>
-  <SearchInput/>
+  <n-message-provider>
+    <SearchInput/>
+  </n-message-provider>
 </template>
 
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
 import SearchInput from './components/SearchInput.vue';
+import { NMessageProvider } from 'naive-ui';
 
 @Options({
   components: {
     SearchInput,
+    NMessageProvider
   },
 })
 export default class App extends Vue {}

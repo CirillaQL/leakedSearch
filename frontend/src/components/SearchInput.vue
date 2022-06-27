@@ -2,11 +2,9 @@
   <n-config-provider>
     <n-space vertical>
       <n-input-group>
-        <n-input placeholder="搜索内容" style="width: 50%;">
-          <template #suffix>
-          </template>
+        <n-input placeholder="搜索内容" style="width: 50%;" v-model:value="input">
         </n-input>
-        <n-button :loading="loading" @click="handleClick">
+        <n-button @click="click">
           搜索
         </n-button>
       </n-input-group>
@@ -15,8 +13,10 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref } from 'vue'
-  import { NConfigProvider, NInput, NSpace, NButton } from 'naive-ui'
+  import { defineComponent, ref} from 'vue'
+  import { NConfigProvider, NInput, NSpace, NButton, useMessage } from 'naive-ui'
+  import SearchService from '@/services/SearchInput';
+  import {AxiosResponse} from 'axios';
 
   export default defineComponent({
     components: {
@@ -26,15 +26,18 @@
       NButton
     },
     setup() {
-      const loadingRef = ref(false)
+      const message = useMessage();
       return {
-        handleClick(){
-          loadingRef.value = true
-          setTimeout(() => {
-            loadingRef.value = false
-          }, 2000)
-        },
-        loading: loadingRef,
+        message,
+        input: ref("")
+      }
+    },
+    methods: {
+      click () {
+        SearchService.getVideos(this.input)
+          .then((response: AxiosResponse) => {
+            console.log(response.data)
+          })
       }
     }
   })
