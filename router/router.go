@@ -1,7 +1,6 @@
 package router
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -58,9 +57,9 @@ func Cors() gin.HandlerFunc {
 func StartWebService() {
 	g := gin.Default()
 	g.Use(Cors())
-	var spankbangVideosList []model.Video
-	var dirtyshipvideosList []model.Video
 	g.GET("/videos/:value", func(ctx *gin.Context) {
+		var spankbangVideosList []model.Video
+		var dirtyshipvideosList []model.Video
 		value := ctx.Param("value")
 		dirtyshipVideoStream := make(chan model.Video, 100)
 		spankbangVideoStream := make(chan model.Video, 100)
@@ -69,11 +68,9 @@ func StartWebService() {
 		go spankbang.GetVideosList(value, spankbangVideoStream, &wg)
 		go dirtyship.GetVideosList(value, dirtyshipVideoStream, &wg)
 		wg.Wait()
-		fmt.Println("read over")
 		for dirtyshipVideo := range dirtyshipVideoStream {
 			dirtyshipvideosList = append(dirtyshipvideosList, dirtyshipVideo)
 		}
-		fmt.Println("dirtyship read over")
 		for spankbangVideo := range spankbangVideoStream {
 			spankbangVideosList = append(spankbangVideosList, spankbangVideo)
 		}
