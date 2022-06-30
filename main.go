@@ -1,8 +1,7 @@
 package main
 
-import "github.com/CirillaQL/leakedSearch/resource/porntn"
+import "github.com/CirillaQL/leakedSearch/router"
 
 func main() {
-	// router.StartWebService()
-	porntn.GetPageNumber("asmr")
+	router.StartWebService()
 }

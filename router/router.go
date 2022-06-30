@@ -7,6 +7,7 @@ import (
 
 	"github.com/CirillaQL/leakedSearch/model"
 	"github.com/CirillaQL/leakedSearch/resource/dirtyship"
+	"github.com/CirillaQL/leakedSearch/resource/porntn"
 	"github.com/CirillaQL/leakedSearch/resource/spankbang"
 	"github.com/gin-gonic/gin"
 )
@@ -14,6 +15,7 @@ import (
 type Videos struct {
 	Spankbang []model.Video
 	Dirtyship []model.Video
+	Porntn    []model.Video
 }
 
 func Cors() gin.HandlerFunc {
@@ -60,13 +62,16 @@ func StartWebService() {
 	g.GET("/videos/:value", func(ctx *gin.Context) {
 		var spankbangVideosList []model.Video
 		var dirtyshipvideosList []model.Video
+		var porntnvideosList []model.Video
 		value := ctx.Param("value")
-		dirtyshipVideoStream := make(chan model.Video, 100)
-		spankbangVideoStream := make(chan model.Video, 100)
+		dirtyshipVideoStream := make(chan model.Video, 200)
+		spankbangVideoStream := make(chan model.Video, 200)
+		porntnVideoStream := make(chan model.Video, 200)
 		wg := sync.WaitGroup{}
-		wg.Add(2)
+		wg.Add(3)
 		go spankbang.GetVideosList(value, spankbangVideoStream, &wg)
 		go dirtyship.GetVideosList(value, dirtyshipVideoStream, &wg)
+		go porntn.GetVideosList(value, porntnVideoStream, &wg)
 		wg.Wait()
 		for dirtyshipVideo := range dirtyshipVideoStream {
 			dirtyshipvideosList = append(dirtyshipvideosList, dirtyshipVideo)
@@ -74,9 +79,13 @@ func StartWebService() {
 		for spankbangVideo := range spankbangVideoStream {
 			spankbangVideosList = append(spankbangVideosList, spankbangVideo)
 		}
+		for porntnVideo := range porntnVideoStream {
+			porntnvideosList = append(porntnvideosList, porntnVideo)
+		}
 		videos := Videos{}
 		videos.Dirtyship = dirtyshipvideosList
 		videos.Spankbang = spankbangVideosList
+		videos.Porntn = porntnvideosList
 		ctx.JSON(http.StatusOK, videos)
 	})
 	g.GET("/ping", func(ctx *gin.Context) {

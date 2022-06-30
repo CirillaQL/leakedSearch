@@ -5,20 +5,20 @@ import (
 	"log"
 	"regexp"
 	"strconv"
+	"sync"
 
+	"github.com/CirillaQL/leakedSearch/model"
 	"github.com/gocolly/colly/v2"
 )
 
 const porntnBaseUrl = "https://porntn.com/"
 
-func GetPageNumber(keyword string) int {
+func getPageNumber(keyword string) int {
 	url := fmt.Sprintf("%ssearch/%s/", porntnBaseUrl, keyword)
-	fmt.Println(url)
 	c := colly.NewCollector()
 	var page int
 	c.OnHTML("li[class='last']", func(e *colly.HTMLElement) {
 		LastPageNumberString := e.ChildAttr("a", "data-parameters")
-		fmt.Println(LastPageNumberString)
 		var numberRex = regexp.MustCompile(`\d+`)
 		resultOfRex := numberRex.FindAllString(LastPageNumberString, -1)
 		realNumber := resultOfRex[len(resultOfRex)-1]
@@ -37,4 +37,38 @@ func GetPageNumber(keyword string) int {
 		log.Fatalf("Can't Connect to Porntn, Error: %+v", err)
 	}
 	return page
+}
+
+func GetVideosList(keyword string, videos chan model.Video, wg *sync.WaitGroup) {
+	defer wg.Done()
+	defer close(videos)
+	url := fmt.Sprintf("%ssearch/%s/?mode=async&function=get_block&block_id=list_videos_videos_list_search_result&q=%s&sort_by=&from_videos=%d&from_albums=%d", porntnBaseUrl, keyword, keyword, 1, 1)
+	c := colly.NewCollector()
+	pageTotal := getPageNumber(keyword)
+	page := 2
+	c.OnHTML("div[id='list_videos_videos_list_search_result_items']", func(e *colly.HTMLElement) {
+		e.ForEach("div[class='item  ']", func(i int, element *colly.HTMLElement) {
+			videoUrl := element.ChildAttr("a", "href")
+			name := element.ChildText("strong")
+			coverImg := element.ChildAttr("div[class='img'] > img", "data-original")
+			video := model.Video{
+				Name:     name,
+				URL:      videoUrl,
+				CoverImg: coverImg,
+			}
+			videos <- video
+		})
+		if page <= pageTotal {
+			nextPageUrl := fmt.Sprintf("%ssearch/%s/?mode=async&function=get_block&block_id=list_videos_videos_list_search_result&q=%s&sort_by=&from_videos=%s&from_albums=%s", porntnBaseUrl, keyword, keyword, strconv.Itoa(page), strconv.Itoa(page))
+			page++
+			err := c.Visit(nextPageUrl)
+			if err != nil {
+				log.Fatalf("Can't Connect to Porntn, Error: %+v", err)
+			}
+		}
+	})
+	err := c.Visit(url)
+	if err != nil {
+		log.Fatalf("Can't Connect to Porntn, Error: %+v", err)
+	}
 }

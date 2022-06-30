@@ -53,8 +53,8 @@
       click () {
         SearchService.getVideos(this.input)
           .then((response: AxiosResponse) => {
-            console.log(response.data.Dirtyship)
-            response.data.Dirtyship.forEach((element: Video) => {
+            console.log(response.data.Porntn)
+            response.data.Porntn.forEach((element: Video) => {
               this.videos.push(element)
             });
             console.log(this.videos)
