@@ -14,9 +14,9 @@
         <div class="item" v-for="video in videos" :key="video.Name" style="width: 50%;">
           <n-card>
             <template #cover>
-              <n-image :src="video.CoverImg" :href="video.URL"/>
+              <n-image :src="video.CoverImg" @click="openImg(video.URL)"/>
             </template>
-            <div class="video_name">{{ video.Name }}</div>
+            <div class="video_name"  :href="video.URL">{{ video.Name }}</div>
           </n-card>
         </div>
       </div>
@@ -51,6 +51,7 @@
     },
     methods: {
       click () {
+        this.videos = []
         SearchService.getVideos(this.input)
           .then((response: AxiosResponse) => {
             console.log(response.data.Porntn)
@@ -62,7 +63,17 @@
           .catch((e: Error) => {
             console.log(e);
           });
+      },
+      openImg (URL: string) {
+        window.open(URL)
       }
     }
   })
 </script>
+
+<style>
+.item {
+  margin: auto;
+  padding: 10px;
+}
+</style>
