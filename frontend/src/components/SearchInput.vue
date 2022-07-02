@@ -11,15 +11,18 @@
     </n-space>
     <n-space vertical>
       <div class="video-list" style="list-style: none;">
-        <div class="item" v-for="video in videos" :key="video.Name" style="width: 50%;">
+      <n-grid :cols="3">
+        <n-grid-item class="item" v-for="video in videos" :key="video.Name" style="width: 50%;">
           <n-card>
             <template #cover>
               <n-image :src="video.CoverImg" @click="openImg(video.URL)"/>
             </template>
             <div class="video_name"  :href="video.URL">{{ video.Name }}</div>
-            <n-tag>{{ video.Source }}</n-tag>
+            <n-tag class="video_tag">{{ video.Source }}</n-tag>
+            <n-button @click="openImg(video.URL)" type="info">点击跳转</n-button>
           </n-card>
-        </div>
+        </n-grid-item>
+      </n-grid>
       </div>
     </n-space>
   </n-config-provider>
@@ -27,7 +30,7 @@
 
 <script lang="ts">
   import { defineComponent, ref} from 'vue'
-  import { NConfigProvider, NInput, NSpace, NButton, useMessage, NImage, NCard, NTag} from 'naive-ui'
+  import { NConfigProvider, NInput, NSpace, NButton, useMessage, NImage, NCard, NTag, NGrid, NGridItem} from 'naive-ui'
   import SearchService from '@/services/SearchInput';
   import Video from '@/types/Video';
   import {AxiosResponse} from 'axios';
@@ -40,7 +43,9 @@
       NButton,
       NImage,
       NCard,
-      NTag
+      NTag,
+      NGrid,
+      NGridItem
     },
     setup() {
       const message = useMessage();
@@ -56,7 +61,6 @@
         this.videos = []
         SearchService.getVideos(this.input)
           .then((response: AxiosResponse) => {
-            console.log(response.data.Porntn)
             response.data.Videos.forEach((element: Video) => {
               this.videos.push(element)
             });
@@ -77,5 +81,9 @@
 .item {
   margin: auto;
   padding: 10px;
+}
+
+.video_tag {
+  margin: 10px;
 }
 </style>
