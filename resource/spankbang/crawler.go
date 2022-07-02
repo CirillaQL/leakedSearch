@@ -53,6 +53,7 @@ func GetVideosList(keyword string, videos chan model.Video, wg *sync.WaitGroup) 
 				URL:      spankbangBaseUrl + videoUrl,
 				CoverImg: coverImg,
 				Name:     name,
+				Source:   "Spankbang",
 			}
 			videos <- video
 		})

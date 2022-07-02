@@ -13,9 +13,7 @@ import (
 )
 
 type Videos struct {
-	Spankbang []model.Video
-	Dirtyship []model.Video
-	Porntn    []model.Video
+	Videos []model.Video
 }
 
 func Cors() gin.HandlerFunc {
@@ -83,9 +81,9 @@ func StartWebService() {
 			porntnvideosList = append(porntnvideosList, porntnVideo)
 		}
 		videos := Videos{}
-		videos.Dirtyship = dirtyshipvideosList
-		videos.Spankbang = spankbangVideosList
-		videos.Porntn = porntnvideosList
+		videos.Videos = append(videos.Videos, dirtyshipvideosList...)
+		videos.Videos = append(videos.Videos, spankbangVideosList...)
+		videos.Videos = append(videos.Videos, porntnvideosList...)
 		ctx.JSON(http.StatusOK, videos)
 	})
 	g.GET("/ping", func(ctx *gin.Context) {

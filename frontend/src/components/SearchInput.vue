@@ -17,6 +17,7 @@
               <n-image :src="video.CoverImg" @click="openImg(video.URL)"/>
             </template>
             <div class="video_name"  :href="video.URL">{{ video.Name }}</div>
+            <n-tag>{{ video.Source }}</n-tag>
           </n-card>
         </div>
       </div>
@@ -26,7 +27,7 @@
 
 <script lang="ts">
   import { defineComponent, ref} from 'vue'
-  import { NConfigProvider, NInput, NSpace, NButton, useMessage, NImage, NCard} from 'naive-ui'
+  import { NConfigProvider, NInput, NSpace, NButton, useMessage, NImage, NCard, NTag} from 'naive-ui'
   import SearchService from '@/services/SearchInput';
   import Video from '@/types/Video';
   import {AxiosResponse} from 'axios';
@@ -38,7 +39,8 @@
       NSpace,
       NButton,
       NImage,
-      NCard
+      NCard,
+      NTag
     },
     setup() {
       const message = useMessage();
@@ -55,7 +57,7 @@
         SearchService.getVideos(this.input)
           .then((response: AxiosResponse) => {
             console.log(response.data.Porntn)
-            response.data.Porntn.forEach((element: Video) => {
+            response.data.Videos.forEach((element: Video) => {
               this.videos.push(element)
             });
             console.log(this.videos)

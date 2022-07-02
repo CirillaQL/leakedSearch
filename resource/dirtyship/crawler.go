@@ -52,6 +52,7 @@ func GetVideosList(keyword string, videos chan model.Video, wg *sync.WaitGroup) 
 				Name:     name,
 				URL:      videoUrl,
 				CoverImg: coverImg,
+				Source:   "DirtyShip",
 			}
 			videos <- video
 		})
