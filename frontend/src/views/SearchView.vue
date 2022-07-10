@@ -2,7 +2,7 @@
   <div class="Result">
     <div class="search-input-result">
       <n-input-group>
-        <n-input placeholder="输入要搜索的内容"/>
+        <n-input placeholder="输入要搜索的内容" v-model:value="searchContent"/>
         <n-button type="info" @click="search">
           <template #icon>
             <n-icon>
@@ -16,8 +16,8 @@
     <n-divider />
     <n-space vertical>
       <div class="video-list">
-        <n-grid :cols="3">
-          <n-grid-item class="item" v-for="video in videos" :key="video.Name" style="width: 50%;">
+        <n-grid :cols="4">
+          <n-grid-item class="item" v-for="video in videos" :key="video.Name">
             <n-card>
               <template #cover>
                 <n-image :src="video.CoverImg" @click="openImg(video.URL)"/>
@@ -37,7 +37,7 @@
 import { IosSearch } from '@vicons/ionicons4'
 import router from "@/router";
 import axios from "axios";
-import {reactive} from "vue";
+import {reactive, ref} from "vue";
 
 export default {
   name: 'SearchView',
@@ -59,12 +59,14 @@ export default {
     };
     fetchVideos()
     return {
-      videos
+      videos,
+      searchContent: ref("")
     }
   },
   methods: {
     search() {
-      router.push({name: 'result', query: {search: "a"}})
+      console.log(router)
+      router.push({name: 'result', query: {search: this.searchContent}})
     },
     openImg (URL) {
       window.open(URL)
@@ -78,5 +80,11 @@ export default {
   width: 40%;
   margin-top: 30px;
   margin-left: 30px;
+}
+.video-list {
+  margin: 20px;
+}
+.video_tag {
+  margin-right: 10px;
 }
 </style>

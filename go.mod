@@ -3,6 +3,7 @@ module github.com/CirillaQL/leakedSearch
 go 1.18
 
 require (
+	github.com/allegro/bigcache/v3 v3.0.2
 	github.com/gin-gonic/gin v1.8.1
 	github.com/gocolly/colly/v2 v2.1.0
 )

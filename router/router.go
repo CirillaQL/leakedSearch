@@ -1,19 +1,36 @@
 package router
 
 import (
-	"log"
-	"net/http"
-	"sync"
-
+	"bytes"
+	"encoding/gob"
+	"fmt"
 	"github.com/CirillaQL/leakedSearch/model"
 	"github.com/CirillaQL/leakedSearch/resource/dirtyship"
 	"github.com/CirillaQL/leakedSearch/resource/porntn"
 	"github.com/CirillaQL/leakedSearch/resource/spankbang"
+	"github.com/CirillaQL/leakedSearch/utils/cache"
 	"github.com/gin-gonic/gin"
+	"log"
+	"net/http"
+	"sync"
 )
 
 type Videos struct {
 	Videos []model.Video
+}
+
+func (v *Videos) MarshalVideosToBin() ([]byte, error) {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	err := enc.Encode(v)
+	return buf.Bytes(), err
+}
+
+func (v *Videos) UnmarshalBinToVideos(data []byte) error {
+	buf := bytes.NewBuffer(data)
+	dec := gob.NewDecoder(buf)
+	err := dec.Decode(v)
+	return err
 }
 
 func Cors() gin.HandlerFunc {
@@ -58,33 +75,54 @@ func StartWebService() {
 	g := gin.Default()
 	g.Use(Cors())
 	g.GET("/videos/:value", func(ctx *gin.Context) {
-		var spankbangVideosList []model.Video
-		var dirtyshipvideosList []model.Video
-		var porntnvideosList []model.Video
+		// Check if in Cache
 		value := ctx.Param("value")
-		dirtyshipVideoStream := make(chan model.Video, 200)
-		spankbangVideoStream := make(chan model.Video, 200)
-		porntnVideoStream := make(chan model.Video, 200)
-		wg := sync.WaitGroup{}
-		wg.Add(3)
-		go spankbang.GetVideosList(value, spankbangVideoStream, &wg)
-		go dirtyship.GetVideosList(value, dirtyshipVideoStream, &wg)
-		go porntn.GetVideosList(value, porntnVideoStream, &wg)
-		wg.Wait()
-		for dirtyshipVideo := range dirtyshipVideoStream {
-			dirtyshipvideosList = append(dirtyshipvideosList, dirtyshipVideo)
+		videoCache := cache.Cache
+		videos, err := videoCache.Get(value)
+
+		if err != nil || videos == nil {
+			// No cache
+			var spankbangVideosList []model.Video
+			var dirtyshipvideosList []model.Video
+			var porntnvideosList []model.Video
+			dirtyshipVideoStream := make(chan model.Video, 200)
+			spankbangVideoStream := make(chan model.Video, 200)
+			porntnVideoStream := make(chan model.Video, 200)
+			wg := sync.WaitGroup{}
+			wg.Add(3)
+			go spankbang.GetVideosList(value, spankbangVideoStream, &wg)
+			go dirtyship.GetVideosList(value, dirtyshipVideoStream, &wg)
+			go porntn.GetVideosList(value, porntnVideoStream, &wg)
+			wg.Wait()
+			for dirtyshipVideo := range dirtyshipVideoStream {
+				dirtyshipvideosList = append(dirtyshipvideosList, dirtyshipVideo)
+			}
+			for spankbangVideo := range spankbangVideoStream {
+				spankbangVideosList = append(spankbangVideosList, spankbangVideo)
+			}
+			for porntnVideo := range porntnVideoStream {
+				porntnvideosList = append(porntnvideosList, porntnVideo)
+			}
+			videosResult := Videos{}
+			videosResult.Videos = append(videosResult.Videos, dirtyshipvideosList...)
+			videosResult.Videos = append(videosResult.Videos, spankbangVideosList...)
+			videosResult.Videos = append(videosResult.Videos, porntnvideosList...)
+
+			videosBinary, err := videosResult.MarshalVideosToBin()
+			if err != nil {
+				fmt.Println(err)
+			}
+			videoCache.Set(value, videosBinary)
+			ctx.JSON(http.StatusOK, videosResult)
+		} else {
+			// Cached
+			var videosResult Videos
+			err := videosResult.UnmarshalBinToVideos(videos)
+			if err != nil {
+				fmt.Println(err)
+			}
+			ctx.JSON(http.StatusOK, videosResult)
 		}
-		for spankbangVideo := range spankbangVideoStream {
-			spankbangVideosList = append(spankbangVideosList, spankbangVideo)
-		}
-		for porntnVideo := range porntnVideoStream {
-			porntnvideosList = append(porntnvideosList, porntnVideo)
-		}
-		videos := Videos{}
-		videos.Videos = append(videos.Videos, dirtyshipvideosList...)
-		videos.Videos = append(videos.Videos, spankbangVideosList...)
-		videos.Videos = append(videos.Videos, porntnvideosList...)
-		ctx.JSON(http.StatusOK, videos)
 	})
 	g.GET("/ping", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "pong")
