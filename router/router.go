@@ -1,37 +1,17 @@
 package router
 
 import (
-	"bytes"
-	"encoding/gob"
-	"fmt"
 	"github.com/CirillaQL/leakedSearch/model"
 	"github.com/CirillaQL/leakedSearch/resource/dirtyship"
 	"github.com/CirillaQL/leakedSearch/resource/porntn"
 	"github.com/CirillaQL/leakedSearch/resource/spankbang"
 	"github.com/CirillaQL/leakedSearch/utils/cache"
+	"github.com/CirillaQL/leakedSearch/utils/logger"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 	"sync"
 )
-
-type Videos struct {
-	Videos []model.Video
-}
-
-func (v *Videos) MarshalVideosToBin() ([]byte, error) {
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	err := enc.Encode(v)
-	return buf.Bytes(), err
-}
-
-func (v *Videos) UnmarshalBinToVideos(data []byte) error {
-	buf := bytes.NewBuffer(data)
-	dec := gob.NewDecoder(buf)
-	err := dec.Decode(v)
-	return err
-}
 
 func Cors() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -74,13 +54,12 @@ func Cors() gin.HandlerFunc {
 func StartWebService() {
 	g := gin.Default()
 	g.Use(Cors())
+	videoCache := cache.Cache
 	g.GET("/videos/:value", func(ctx *gin.Context) {
 		// Check if in Cache
 		value := ctx.Param("value")
-		videoCache := cache.Cache
 		videos, err := videoCache.Get(value)
-
-		if err != nil || videos == nil {
+		if err != nil {
 			// No cache
 			var spankbangVideosList []model.Video
 			var dirtyshipvideosList []model.Video
@@ -103,23 +82,26 @@ func StartWebService() {
 			for porntnVideo := range porntnVideoStream {
 				porntnvideosList = append(porntnvideosList, porntnVideo)
 			}
-			videosResult := Videos{}
+			videosResult := model.Videos{}
 			videosResult.Videos = append(videosResult.Videos, dirtyshipvideosList...)
 			videosResult.Videos = append(videosResult.Videos, spankbangVideosList...)
 			videosResult.Videos = append(videosResult.Videos, porntnvideosList...)
 
 			videosBinary, err := videosResult.MarshalVideosToBin()
 			if err != nil {
-				fmt.Println(err)
+				logger.Log().Error("Can't marshal videos list to binary")
 			}
-			videoCache.Set(value, videosBinary)
+			err = videoCache.Set(value, videosBinary)
+			if err != nil {
+				logger.Log().Error("Can't put videos into cache")
+			}
 			ctx.JSON(http.StatusOK, videosResult)
 		} else {
 			// Cached
-			var videosResult Videos
+			var videosResult model.Videos
 			err := videosResult.UnmarshalBinToVideos(videos)
 			if err != nil {
-				fmt.Println(err)
+				logger.Log().Error("Can't unmarshal binary to videos")
 			}
 			ctx.JSON(http.StatusOK, videosResult)
 		}
