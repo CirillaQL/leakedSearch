@@ -5,9 +5,9 @@ import (
 	"time"
 )
 
-var Cache *bigcache.BigCache
+var VideoCache *bigcache.BigCache
 
 func init() {
 	cache, _ := bigcache.NewBigCache(bigcache.DefaultConfig(10 * time.Minute))
-	Cache = cache
+	VideoCache = cache
 }
