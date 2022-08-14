@@ -6,6 +6,7 @@ require (
 	github.com/allegro/bigcache/v3 v3.0.2
 	github.com/gin-gonic/gin v1.8.1
 	github.com/gocolly/colly/v2 v2.1.0
+	github.com/pkg/errors v0.8.1
 	go.uber.org/zap v1.21.0
 )
 

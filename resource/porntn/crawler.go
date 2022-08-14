@@ -2,10 +2,14 @@ package porntn
 
 import (
 	"fmt"
+	"github.com/CirillaQL/leakedSearch/utils/logger"
+	"github.com/allegro/bigcache/v3"
+	"github.com/pkg/errors"
 	"log"
 	"regexp"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/CirillaQL/leakedSearch/model"
 	"github.com/gocolly/colly/v2"
@@ -14,6 +18,20 @@ import (
 const porntnBaseUrl = "https://porntn.com/"
 
 type Porntn struct {
+	videoCache *bigcache.BigCache
+	videosChan chan model.Video
+}
+
+func NewPorntn() (*Porntn, error) {
+	cache, err := bigcache.NewBigCache(bigcache.DefaultConfig(10 * time.Minute))
+	if err != nil {
+		logger.Log().Errorf("Failed to Create cache for porntn videos struct, Error: %v", err)
+		return nil, errors.Wrap(err, "Failed to Create cache for porntn videos struct")
+	}
+	return &Porntn{
+		videosChan: make(chan model.Video, 20),
+		videoCache: cache,
+	}, nil
 }
 
 func (p *Porntn) GetPageNumber(keyword string) int {

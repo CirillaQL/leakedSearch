@@ -2,25 +2,35 @@ package spankbang
 
 import (
 	"fmt"
+	"github.com/allegro/bigcache/v3"
+	"github.com/pkg/errors"
 	"log"
 	"strconv"
 	"sync"
 	"time"
 
 	"github.com/CirillaQL/leakedSearch/model"
+	"github.com/CirillaQL/leakedSearch/utils/logger"
 	"github.com/gocolly/colly/v2"
 )
 
 const spankbangBaseUrl = "https://spankbang.com"
 
 type SpankBang struct {
+	videoCache *bigcache.BigCache
 	videosChan chan model.Video
 }
 
-func NewSpankBang() *SpankBang {
+func NewSpankBang() (*SpankBang, error) {
+	cache, err := bigcache.NewBigCache(bigcache.DefaultConfig(10 * time.Minute))
+	if err != nil {
+		logger.Log().Errorf("Failed to Create cache for spankbang videos struct, Error: %v", err)
+		return nil, errors.Wrap(err, "Failed to Create cache for spankbang videos struct")
+	}
 	return &SpankBang{
 		videosChan: make(chan model.Video, 20),
-	}
+		videoCache: cache,
+	}, nil
 }
 
 func (s *SpankBang) GetPageNumber(keyword string) int {

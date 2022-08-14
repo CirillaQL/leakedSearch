@@ -2,6 +2,9 @@ package dirtyship
 
 import (
 	"fmt"
+	"github.com/CirillaQL/leakedSearch/utils/logger"
+	"github.com/allegro/bigcache/v3"
+	"github.com/pkg/errors"
 	"log"
 	"strconv"
 	"sync"
@@ -14,6 +17,20 @@ import (
 const dirtyshipBaseUrl = "https://dirtyship.com/"
 
 type DirtyShip struct {
+	videoCache *bigcache.BigCache
+	videosChan chan model.Video
+}
+
+func NewDirtyShip() (*DirtyShip, error) {
+	cache, err := bigcache.NewBigCache(bigcache.DefaultConfig(10 * time.Minute))
+	if err != nil {
+		logger.Log().Errorf("Failed to Create cache for dirtyship videos struct, Error: %v", err)
+		return nil, errors.Wrap(err, "Failed to Create cache for dirtyship videos struct")
+	}
+	return &DirtyShip{
+		videosChan: make(chan model.Video, 20),
+		videoCache: cache,
+	}, nil
 }
 
 func (d *DirtyShip) GetPageNumber(keyword string) int {
