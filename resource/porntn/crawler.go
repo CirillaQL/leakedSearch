@@ -13,7 +13,10 @@ import (
 
 const porntnBaseUrl = "https://porntn.com/"
 
-func getPageNumber(keyword string) int {
+type Porntn struct {
+}
+
+func (p *Porntn) GetPageNumber(keyword string) int {
 	url := fmt.Sprintf("%ssearch/%s/", porntnBaseUrl, keyword)
 	c := colly.NewCollector()
 	var page int
@@ -39,12 +42,12 @@ func getPageNumber(keyword string) int {
 	return page
 }
 
-func GetVideosList(keyword string, videos chan model.Video, wg *sync.WaitGroup) {
+func (p *Porntn) GetVideosList(keyword string, videos chan model.Video, wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer close(videos)
 	url := fmt.Sprintf("%ssearch/%s/?mode=async&function=get_block&block_id=list_videos_videos_list_search_result&q=%s&sort_by=&from_videos=%d&from_albums=%d", porntnBaseUrl, keyword, keyword, 1, 1)
 	c := colly.NewCollector()
-	pageTotal := getPageNumber(keyword)
+	pageTotal := p.GetPageNumber(keyword)
 	page := 2
 	c.OnHTML("div[id='list_videos_videos_list_search_result_items']", func(e *colly.HTMLElement) {
 		e.ForEach("div[class='item  ']", func(i int, element *colly.HTMLElement) {

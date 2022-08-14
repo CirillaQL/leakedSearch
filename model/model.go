@@ -12,18 +12,18 @@ type Video struct {
 	Source   string
 }
 
-type Videos struct {
+type VideoSlice struct {
 	Videos []Video
 }
 
-func (v *Videos) MarshalVideosToBin() ([]byte, error) {
+func (v *VideoSlice) MarshalVideosToBin() ([]byte, error) {
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	err := enc.Encode(v)
 	return buf.Bytes(), err
 }
 
-func (v *Videos) UnmarshalBinToVideos(data []byte) error {
+func (v *VideoSlice) UnmarshalBinToVideos(data []byte) error {
 	buf := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(buf)
 	err := dec.Decode(v)

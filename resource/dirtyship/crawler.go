@@ -13,7 +13,10 @@ import (
 
 const dirtyshipBaseUrl = "https://dirtyship.com/"
 
-func getPageNumber(keyword string) int {
+type DirtyShip struct {
+}
+
+func (d *DirtyShip) GetPageNumber(keyword string) int {
 	url := fmt.Sprintf("%s?search_param=all&s=%s", dirtyshipBaseUrl, keyword)
 	c := colly.NewCollector()
 	var page int
@@ -36,12 +39,12 @@ func getPageNumber(keyword string) int {
 	return page
 }
 
-func GetVideosList(keyword string, videos chan model.Video, wg *sync.WaitGroup) {
+func (d *DirtyShip) GetVideosList(keyword string, videos chan model.Video, wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer close(videos)
 	url := fmt.Sprintf("%s?search_param=all&s=%s", dirtyshipBaseUrl, keyword)
 	c := colly.NewCollector()
-	pageTotal := getPageNumber(keyword)
+	pageTotal := d.GetPageNumber(keyword)
 	page := 2
 	c.OnHTML("ul[class='Thumbnail_List yesPopunder']", func(e *colly.HTMLElement) {
 		e.ForEach("li", func(i int, element *colly.HTMLElement) {

@@ -1,8 +1,8 @@
 .idea
 
-frontend/.DS_Store
-frontend/node_modules
-frontend/dist
+web/.DS_Store
+web/node_modules
+web/dist
 
 .vscode
 *.suo

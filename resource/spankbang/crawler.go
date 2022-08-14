@@ -13,7 +13,17 @@ import (
 
 const spankbangBaseUrl = "https://spankbang.com"
 
-func getPageNumber(keyword string) int {
+type SpankBang struct {
+	videosChan chan model.Video
+}
+
+func NewSpankBang() *SpankBang {
+	return &SpankBang{
+		videosChan: make(chan model.Video, 20),
+	}
+}
+
+func (s *SpankBang) GetPageNumber(keyword string) int {
 	url := fmt.Sprintf("%s/s/%s/", spankbangBaseUrl, keyword)
 	c := colly.NewCollector()
 	var page int
@@ -36,12 +46,12 @@ func getPageNumber(keyword string) int {
 	return page
 }
 
-func GetVideosList(keyword string, videos chan model.Video, wg *sync.WaitGroup) {
+func (s *SpankBang) GetVideosList(keyword string, videos chan model.Video, wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer close(videos)
 	url := fmt.Sprintf("%s/s/%s/", spankbangBaseUrl, keyword)
 	c := colly.NewCollector()
-	pageTotal := getPageNumber(keyword)
+	pageTotal := s.GetPageNumber(keyword)
 	page := 2
 	// First Page
 	c.OnHTML("div[class='video-list video-rotate video-list-with-ads']", func(e *colly.HTMLElement) {
