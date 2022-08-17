@@ -3,6 +3,7 @@ package model
 import (
 	"bytes"
 	"encoding/gob"
+	"sync"
 )
 
 type Video struct {
@@ -12,18 +13,19 @@ type Video struct {
 	Source   string
 }
 
-type VideoSlice struct {
+type VideoList struct {
+	mu     sync.RWMutex
 	Videos []Video
 }
 
-func (v *VideoSlice) MarshalVideosToBin() ([]byte, error) {
+func (v *VideoList) MarshalVideosToBin() ([]byte, error) {
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	err := enc.Encode(v)
 	return buf.Bytes(), err
 }
 
-func (v *VideoSlice) UnmarshalBinToVideos(data []byte) error {
+func (v *VideoList) UnmarshalBinToVideos(data []byte) error {
 	buf := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(buf)
 	err := dec.Decode(v)

@@ -5,7 +5,10 @@ import (
 	"sync"
 )
 
+const DefaultPageContentNumber = 20
+
 type Crawler interface {
 	GetPageNumber(keyword string) int
 	GetVideosList(keyword string, videos chan model.Video, wg *sync.WaitGroup)
+	StoreToCache(keyword string)
 }

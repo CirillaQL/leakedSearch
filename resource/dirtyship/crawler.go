@@ -92,3 +92,7 @@ func (d *DirtyShip) GetVideosList(keyword string, videos chan model.Video, wg *s
 		log.Fatalf("Can't Connect to DirtyShip, Error: %+v", err)
 	}
 }
+
+func (d *DirtyShip) StoreToCache(keyword string) {
+
+}

@@ -48,7 +48,7 @@ export default {
     let videos = reactive([])
     let searchContent = router.currentRoute.value.query.search
     const fetchVideos = () => {
-      let url = 'http://localhost:33333/videos/'+searchContent
+      let url = 'http://localhost:33333/videos/'+searchContent+'?page=1'
       axios
           .get(url)
           .then(response => (
@@ -70,6 +70,9 @@ export default {
     },
     openImg (URL) {
       window.open(URL)
+    },
+    scroll() {
+
     }
   }
 }

@@ -94,3 +94,7 @@ func (p *Porntn) GetVideosList(keyword string, videos chan model.Video, wg *sync
 		log.Fatalf("Can't Connect to Porntn, Error: %+v", err)
 	}
 }
+
+func (p *Porntn) StoreToCache(keyword string) {
+
+}

@@ -3,10 +3,10 @@ package spankbang
 import (
 	"fmt"
 	"github.com/allegro/bigcache/v3"
+	"github.com/gocolly/colly/v2/proxy"
 	"github.com/pkg/errors"
 	"log"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/CirillaQL/leakedSearch/model"
@@ -18,6 +18,7 @@ const spankbangBaseUrl = "https://spankbang.com"
 
 type SpankBang struct {
 	videoCache *bigcache.BigCache
+	videosList []*model.Video
 	videosChan chan model.Video
 }
 
@@ -56,11 +57,14 @@ func (s *SpankBang) GetPageNumber(keyword string) int {
 	return page
 }
 
-func (s *SpankBang) GetVideosList(keyword string, videos chan model.Video, wg *sync.WaitGroup) {
-	defer wg.Done()
-	defer close(videos)
+func (s *SpankBang) CrawlerVideos(keyword string) {
 	url := fmt.Sprintf("%s/s/%s/", spankbangBaseUrl, keyword)
-	c := colly.NewCollector()
+	c := colly.NewCollector(colly.AllowURLRevisit())
+	rp, err := proxy.RoundRobinProxySwitcher("socks5://127.0.0.1:10808", "http://127.0.0.1:10809")
+	if err != nil {
+		log.Fatal(err)
+	}
+	c.SetProxyFunc(rp)
 	pageTotal := s.GetPageNumber(keyword)
 	page := 2
 	// First Page
@@ -75,7 +79,7 @@ func (s *SpankBang) GetVideosList(keyword string, videos chan model.Video, wg *s
 				Name:     name,
 				Source:   "Spankbang",
 			}
-			videos <- video
+			s.videosList = append(s.videosList, &video)
 		})
 		page++
 		if page <= pageTotal {
@@ -88,8 +92,13 @@ func (s *SpankBang) GetVideosList(keyword string, videos chan model.Video, wg *s
 		}
 	})
 
-	err := c.Visit(url)
+	err = c.Visit(url)
 	if err != nil {
 		log.Fatalf("Can't Connect to SpankBang, Error: %+v", err)
 	}
+}
+
+func (s *SpankBang) LoadVideos(keyword string) {
+	go s.CrawlerVideos(keyword)
+
 }
